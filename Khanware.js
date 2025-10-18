@@ -1,4 +1,4 @@
-const ver = "V4.4.0";
+const ver = "V4.5.0";
 let isDev = false;
 const repoPath = `https://raw.githubusercontent.com/hitlbungee09/anders/${isDev ? "dev" : "main"}/`;
 
@@ -242,13 +242,38 @@ function setupMenu() {
         if (isVisible) { hideMenu(); playAudio('https://r2.e-z.host/4d0a0bea-60f8-44d6-9e74-3032a64a9f32/rqizlm03.wav'); } 
         else { showMenu(); playAudio('https://r2.e-z.host/4d0a0bea-60f8-44d6-9e74-3032a64a9f32/3kd01iyj.wav'); }
     };
+    
+    watermark.addEventListener('mousedown', function(e) {
+        let wasDragged = false;
+        const offsetX = e.clientX - watermark.getBoundingClientRect().left;
+        const offsetY = e.clientY - watermark.getBoundingClientRect().top;
+        
+        const onMouseMove = (moveEvent) => {
+            wasDragged = true;
+            watermark.style.transition = 'none';
+            let newX = Math.max(0, Math.min(moveEvent.clientX - offsetX, window.innerWidth - watermark.offsetWidth));
+            let newY = Math.max(0, Math.min(moveEvent.clientY - offsetY, window.innerHeight - watermark.offsetHeight));
+            Object.assign(watermark.style, { left: `${newX}px`, top: `${newY}px` });
+        };
+        
+        const onMouseUp = () => {
+            document.removeEventListener('mousemove', onMouseMove);
+            document.removeEventListener('mouseup', onMouseUp);
+            watermark.style.transition = 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
+            if (!wasDragged) {
+                toggleMenu();
+            }
+        };
+        
+        document.addEventListener('mousemove', onMouseMove);
+        document.addEventListener('mouseup', onMouseUp);
+    });
 
-    let wasDragging = false, isDragging = false, offsetX, offsetY;
-    watermark.addEventListener('mousedown', (e) => { wasDragging = false; isDragging = true; offsetX = e.clientX - watermark.getBoundingClientRect().left; offsetY = e.clientY - watermark.getBoundingClientRect().top; watermark.style.transition = 'none'; });
-    document.addEventListener('mousemove', (e) => { if (isDragging) { wasDragging = true; let newX = Math.max(0, Math.min(e.clientX - offsetX, window.innerWidth - watermark.offsetWidth)); let newY = Math.max(0, Math.min(e.clientY - offsetY, window.innerHeight - watermark.offsetHeight)); Object.assign(watermark.style, { left: `${newX}px`, top: `${newY}px` }); } });
-    document.addEventListener('mouseup', () => { if (isDragging) { isDragging = false; watermark.style.transition = 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)'; } });
-    watermark.addEventListener('click', (e) => { if (!wasDragging) { toggleMenu(); } });
-    document.addEventListener('click', (e) => { if (dropdownMenu.style.opacity === '1' && !watermark.contains(e.target)) { hideMenu(); } });
+    document.addEventListener('click', (e) => {
+        if (dropdownMenu.style.opacity === '1' && !watermark.contains(e.target) && e.target !== watermark) {
+            hideMenu();
+        }
+    });
 }
 
 function setupMain(){
