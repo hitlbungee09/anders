@@ -1,4 +1,4 @@
-const ver = "V4.1.0";
+const ver = "V4.4.0";
 let isDev = false;
 const repoPath = `https://raw.githubusercontent.com/hitlbungee09/anders/${isDev ? "dev" : "main"}/`;
 
@@ -63,7 +63,7 @@ const sendToast = (text, duration = 3000, gravity = 'bottom') => {
     }).showToast();
 };
 
-async function showSplashScreen() {
+async function showSplashScreen(initialTip) {
     const style = document.createElement('style');
     style.innerHTML = `
         @keyframes fadeIn { 0% { opacity: 0; transform: scale(0.98); } 100% { opacity: 1; transform: scale(1); } }
@@ -71,17 +71,28 @@ async function showSplashScreen() {
             0%, 100% { text-shadow: 0 0 10px #8e2de2, 0 0 20px #8e2de2; }
             50% { text-shadow: 0 0 20px #8e2de2, 0 0 40px #4a00e0; }
         }
+        @keyframes tipFade {
+            0%, 100% { opacity: 0; transform: translateY(5px); }
+            20%, 80% { opacity: 1; transform: translateY(0); }
+        }
     `;
     document.head.appendChild(style);
     Object.assign(splashScreen.style, {
         position: 'fixed', top: '0', left: '0', width: '100%', height: '100%',
-        backgroundColor: '#0a0a0f', display: 'flex', alignItems: 'center',
+        backgroundColor: '#0a0a0f', display: 'flex', flexDirection: 'column', alignItems: 'center',
         justifyContent: 'center', zIndex: '9999', opacity: '0',
         transition: 'opacity 0.5s ease-out', userSelect: 'none',
-        fontFamily: "MuseoSans, sans-serif", fontSize: '42px',
+        fontFamily: "MuseoSans, sans-serif",
         animation: 'fadeIn 0.5s forwards'
     });
-    splashScreen.innerHTML = '<span style="color:white;">SENSEWARE</span><span style="color:#c084fc; animation: textGlow 2s infinite ease-in-out;">.SPACE</span>';
+    splashScreen.innerHTML = `
+        <div style="font-size: 42px;">
+            <span style="color:white;">SENSEWARE</span><span style="color:#c084fc; animation: textGlow 2s infinite ease-in-out;">.SPACE</span>
+        </div>
+        <div id="splash-tip-container" style="height: 40px; display: flex; align-items: center;">
+             <p id="splash-tip" style="font-size: 16px; color: #aaa; margin-top: 20px;">${initialTip}</p>
+        </div>
+    `;
     document.body.appendChild(splashScreen);
 }
 
@@ -106,30 +117,24 @@ function setupMenu() {
                 featureContainer.appendChild(header);
                 return;
             }
-            
             const featureRow = document.createElement('div');
             featureRow.className = 'feature-row';
             if (attribute.className) featureRow.classList.add(attribute.className);
             if (attribute.attributes && attribute.attributes.includes('style="display:none;"')) featureRow.style.display = 'none';
-
             const label = document.createElement('label');
             label.setAttribute('for', attribute.name);
             label.textContent = attribute.label;
-
             const element = document.createElement('input');
             element.type = attribute.type;
             element.id = attribute.name;
-
             if (attribute.attributes) {
                 attribute.attributes.split(' ').map(attr => attr.split('=')).forEach(([key, value]) => {
                     value = value ? value.replace(/"/g, '') : '';
                     key === 'style' ? element.style.cssText = value : element.setAttribute(key, value);
                 });
             }
-
             if (attribute.variable) element.setAttribute('setting-data', attribute.variable);
             if (attribute.dependent) element.setAttribute('dependent', attribute.dependent);
-            
             featureRow.appendChild(label);
             featureRow.appendChild(element);
             featureContainer.appendChild(featureRow);
@@ -147,7 +152,6 @@ function setupMenu() {
                 setFeatureByPath(setting, value);
                 if (callback) callback(value, e);
             };
-
             if (element.type === 'checkbox') {
                 element.addEventListener('change', (e) => {
                     playAudio('https://r2.e-z.host/4d0a0bea-60f8-44d6-9e74-3032a64a9f32/5os0bypi.wav');
@@ -206,11 +210,11 @@ function setupMenu() {
     let featuresList = [
         { name: 'general', type: 'nonInput' },
         { name: 'showAnswers', type: 'checkbox', variable: 'features.showAnswers', label: 'Reveal Answers' },
-        { name: 'autoAnswer', type: 'checkbox', variable: 'features.autoAnswer', dependent: 'autoAnswerDelay,nextRecomendation,repeatQuestion', label: 'Auto Answer' },
+        { name: 'autoAnswer', type: 'checkbox', variable: 'features.autoAnswer', dependent: 'autoAnswerDelay,nextRecomendation,repeatQuestion', label: 'Auto Answer [Beta]' },
         { name: 'autoAnswerDelay', className: 'autoAnswerDelay', type: 'range', variable: 'features.autoAnswerDelay', attributes: 'style="display:none;" min="1" max="3" value="1"', label: 'Delay' },
         { name: 'nextRecomendation', className: 'nextRecomendation', type: 'checkbox', variable: 'features.nextRecomendation', attributes: 'style="display:none;"', label: 'Smart Next' },
         { name: 'repeatQuestion', className: 'repeatQuestion', type: 'checkbox', variable: 'features.repeatQuestion', attributes: 'style="display:none;"', label: 'Repeat Correct' },
-        { name: 'minuteFarm', type: 'checkbox', variable: 'features.minuteFarmer', label: 'Farm Minutes' },
+        { name: 'minuteFarm', type: 'checkbox', variable: 'features.minuteFarmer', label: 'Farm Minutes [Decoration]' },
         { name: 'spoofing', type: 'nonInput' },
         { name: 'questionSpoof', type: 'checkbox', variable: 'features.questionSpoof', attributes: 'checked', label: 'Spoof Questions' },
         { name: 'videoSpoof', type: 'checkbox', variable: 'features.videoSpoof', attributes: 'checked', label: 'Spoof Videos' },
@@ -233,55 +237,18 @@ function setupMenu() {
     
     const showMenu = () => { dropdownMenu.style.opacity = '1'; dropdownMenu.style.transform = 'translateY(0)'; dropdownMenu.style.pointerEvents = 'auto'; };
     const hideMenu = () => { dropdownMenu.style.opacity = '0'; dropdownMenu.style.transform = 'translateY(-10px)'; dropdownMenu.style.pointerEvents = 'none'; };
-    
     const toggleMenu = () => {
         const isVisible = dropdownMenu.style.opacity === '1';
-        if (isVisible) {
-            hideMenu();
-            playAudio('https://r2.e-z.host/4d0a0bea-60f8-44d6-9e74-3032a64a9f32/rqizlm03.wav');
-        } else {
-            showMenu();
-            playAudio('https://r2.e-z.host/4d0a0bea-60f8-44d6-9e74-3032a64a9f32/3kd01iyj.wav');
-        }
+        if (isVisible) { hideMenu(); playAudio('https://r2.e-z.host/4d0a0bea-60f8-44d6-9e74-3032a64a9f32/rqizlm03.wav'); } 
+        else { showMenu(); playAudio('https://r2.e-z.host/4d0a0bea-60f8-44d6-9e74-3032a64a9f32/3kd01iyj.wav'); }
     };
 
-    let wasDragging = false;
-    watermark.addEventListener('mousedown', () => wasDragging = false);
-    watermark.addEventListener('mousemove', () => wasDragging = true);
-    watermark.addEventListener('click', () => {
-        if (!wasDragging) {
-            toggleMenu();
-        }
-    });
-
-    document.addEventListener('click', (e) => {
-        if (dropdownMenu.style.opacity === '1' && !watermark.contains(e.target)) {
-            hideMenu();
-        }
-    });
-
-    let isDragging = false, offsetX, offsetY;
-    watermark.addEventListener('mousedown', e => {
-        if (e.target === watermark) {
-            isDragging = true;
-            offsetX = e.clientX - watermark.getBoundingClientRect().left;
-            offsetY = e.clientY - watermark.getBoundingClientRect().top;
-            watermark.style.transition = 'none';
-        }
-    });
-    document.addEventListener('mousemove', e => {
-        if (isDragging) {
-            let newX = Math.max(0, Math.min(e.clientX - offsetX, window.innerWidth - watermark.offsetWidth));
-            let newY = Math.max(0, Math.min(e.clientY - offsetY, window.innerHeight - watermark.offsetHeight));
-            Object.assign(watermark.style, { left: `${newX}px`, top: `${newY}px` });
-        }
-    });
-    document.addEventListener('mouseup', () => {
-        if (isDragging) {
-            isDragging = false;
-            watermark.style.transition = 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)';
-        }
-    });
+    let wasDragging = false, isDragging = false, offsetX, offsetY;
+    watermark.addEventListener('mousedown', (e) => { wasDragging = false; isDragging = true; offsetX = e.clientX - watermark.getBoundingClientRect().left; offsetY = e.clientY - watermark.getBoundingClientRect().top; watermark.style.transition = 'none'; });
+    document.addEventListener('mousemove', (e) => { if (isDragging) { wasDragging = true; let newX = Math.max(0, Math.min(e.clientX - offsetX, window.innerWidth - watermark.offsetWidth)); let newY = Math.max(0, Math.min(e.clientY - offsetY, window.innerHeight - watermark.offsetHeight)); Object.assign(watermark.style, { left: `${newX}px`, top: `${newY}px` }); } });
+    document.addEventListener('mouseup', () => { if (isDragging) { isDragging = false; watermark.style.transition = 'all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1)'; } });
+    watermark.addEventListener('click', (e) => { if (!wasDragging) { toggleMenu(); } });
+    document.addEventListener('click', (e) => { if (dropdownMenu.style.opacity === '1' && !watermark.contains(e.target)) { hideMenu(); } });
 }
 
 function setupMain(){
@@ -301,57 +268,60 @@ function setupMain(){
         return window.location.href = "https://www.khanacademy.org/";
     }
 
-    showSplashScreen();
+    const loadingTips = [
+        "No uses esta herramienta descaradamente...",
+        "Recuerda que es mejor saber qué hay detrás de cada proceso.",
+        "La curiosidad es el primer paso hacia el conocimiento.",
+        "Usa tus nuevos poderes para el bien, no para el mal.",
+        "Cada error es una oportunidad de aprendizaje."
+    ];
+    let tipIndex = 0;
+    showSplashScreen(loadingTips[tipIndex]);
 
+    const tipElement = document.getElementById('splash-tip');
+    const tipInterval = setInterval(() => {
+        tipIndex = (tipIndex + 1) % loadingTips.length;
+        tipElement.style.animation = 'none';
+        void tipElement.offsetWidth;
+        tipElement.style.animation = 'tipFade 1.7s ease-in-out';
+        tipElement.textContent = loadingTips[tipIndex];
+    }, 1700);
+    
     await Promise.all([
         loadScript('https://cdn.jsdelivr.net/npm/darkreader@4.9.92/darkreader.min.js', 'darkReaderPlugin'),
         loadScript('https://cdn.jsdelivr.net/npm/toastify-js', 'toastifyPlugin'),
-        loadCss('https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css')
+        loadCss('https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css'),
+        delay(5000)
     ]);
+    
+    clearInterval(tipInterval);
 
     DarkReader.setFetchMethod(window.fetch);
     if (features.darkMode) DarkReader.enable();
     
     try {
-        const response = await fetch("https://pt.khanacademy.org/api/internal/graphql/getFullUserProfile", {
-            method: "POST",
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ operationName: "getFullUserProfile", query: "query getFullUserProfile { user { id nickname username } }" })
-        });
+        const response = await fetch("https://pt.khanacademy.org/api/internal/graphql/getFullUserProfile", { method: "POST", headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ operationName: "getFullUserProfile", query: "query getFullUserProfile { user { id nickname username } }" }) });
         const data = await response.json();
-        user = {
-            nickname: data.data.user.nickname,
-            username: data.data.user.username,
-            UID: data.data.user.id.slice(-5)
-        };
-    } catch (error) {
-        console.error("Senseware: Failed to fetch user profile.", error);
-    }
+        user = { nickname: data.data.user.nickname, username: data.data.user.username, UID: data.data.user.id.slice(-5) };
+    } catch (error) { console.error("Senseware: Failed to fetch user profile.", error); }
     
     sendToast("✅ Senseware Injected Successfully");
     playAudio('https://r2.e-z.host/4d0a0bea-60f8-44d6-9e74-3032a64a9f32/gcelzszy.wav');
     
-    await delay(1000);
-    sendToast(`⭐ Welcome back, ${user.nickname}`);
-    if (device.apple) {
-        await delay(500);
-        sendToast(`🍏 Detected Apple device... good luck`);
-    }
-
     await hideSplashScreen();
+    
+    sendToast(`⭐ Welcome back, ${user.nickname}`);
+    
     setupMenu();
     setupMain();
 
     loadScript('https://raw.githubusercontent.com/adryd325/oneko.js/main/oneko.js', 'onekoJs').then(() => {
         let onekoEl = document.getElementById('oneko');
-        onekoEl.style.backgroundImage = "url('https://raw.githubusercontent.com/adryd325/oneko.js/main/oneko.gif')";
-        onekoEl.style.display = features.onekoJs ? 'block' : 'none';
-        
-        const onekoCheckbox = document.getElementById('onekoJs');
-        if (onekoCheckbox) {
-            onekoCheckbox.addEventListener('change', (e) => {
-                onekoEl.style.display = e.target.checked ? 'block' : 'none';
-            });
+        if (onekoEl) {
+            onekoEl.style.backgroundImage = "url('https://raw.githubusercontent.com/adryd325/oneko.js/main/oneko.gif')";
+            onekoEl.style.display = features.onekoJs ? 'block' : 'none';
+            const onekoCheckbox = document.getElementById('onekoJs');
+            if (onekoCheckbox) { onekoCheckbox.addEventListener('change', (e) => { onekoEl.style.display = e.target.checked ? 'block' : 'none'; }); }
         }
     });
     
