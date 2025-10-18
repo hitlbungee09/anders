@@ -15,7 +15,7 @@ JSON.parse = function (e, t) {
                                 widget.options.choices.forEach(choice => {
                                     if (choice.correct) {
                                         choice.content = "✅ " + choice.content;
-                                        sendToast("🔓 Respostas reveladas.", 1000);                
+                                        sendToast("🔓 Te revelé las respuestas.", 1000);                
                                     }
                                 });
                             }
