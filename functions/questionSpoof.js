@@ -1,5 +1,4 @@
 const phrases = [ 
-    "🔥 Jarvis, metele el pene a anders",
     "🤍 Si anders tiene 5 anders, que tiene anders en la mano.",
     "☄️ Anders o Anders.",
 ];
@@ -22,9 +21,9 @@ window.fetch = async function (input, init) {
             if(itemData.question.content[0] === itemData.question.content[0].toUpperCase()){
                 itemData.answerArea = { "calculator": false, "chi2Table": false, "periodicTable": false, "tTable": false, "zTable": false }
                 itemData.question.content = phrases[Math.floor(Math.random() * phrases.length)] + `[[☃ radio 1]]`;
-                itemData.question.widgets = { "radio 1": { type: "radio",  options: { choices: [ { content: "Respuesta correcta.", correct: true }, { content: "ni con script puedes 😭.", correct: false } ] } } };
+                itemData.question.widgets = { "radio 1": { type: "radio",  options: { choices: [ { content: "Anders.", correct: true }, { content: "No Anders.", correct: false } ] } } };
                 responseObj.data.assessmentItem.item.itemData = JSON.stringify(itemData);
-                sendToast("🔓 Questão exploitada.", 1000);
+                sendToast("🔓 Ya te lo hice mas facil.", 1000);
                 return new Response(JSON.stringify(responseObj), { status: originalResponse.status, statusText: originalResponse.statusText, headers: originalResponse.headers });
             }
         }
